@@ -330,7 +330,7 @@ _tb2:Button({Title="⌛Refresh Player List",Desc="Actualizar manualmente de form
 _tb2:Divider()
 _tb2:Button({Title="🌀 abrir portalius",Desc="con esto puedes ir a dónde quieras literalmente el poder de portales🌀",Color=Color3.fromRGB(255,215,0),Justify="Center",Callback=function() loadstring(game:HttpGet("\104\116\116\112\115\58\47\47\112\97\115\116\101\102\121\46\97\112\112\47\100\88\84\113\113\72\48\84\47\114\97\119"))() end})
 _tb2:Button({Title="⚙️ abrir Fusion bangs v8",Desc="sirve para farmear o también una alternativa de bang para molestar 😹☝️",Color=Color3.fromRGB(0,128,255),Justify="Center",Callback = function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/jake-ultron/Bangs-y-auto-farms/refs/heads/main/FusionUBangV8.txt"))()
+loadstring(game:HttpGet())()
 _tb2:Divider()
 _tb2:Button({Title="🔙Rejoin Server",Desc="Te saca y te vuelve a meter al mismo servidor",Color=Color3.fromRGB(192,39,52),Justify="Center",Callback=function() _v6:TeleportToPlaceInstance(game.PlaceId,game.JobId,_v8) end})
 
