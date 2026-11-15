@@ -458,13 +458,76 @@ _tb4:Keybind({Title="Keybind Reset",Desc="Tecla para reiniciar tu personaje (PC)
 _tb4:Toggle({Title="Mover Botón DASH",Desc="Permite mover el botón DASH de forma táctil",Value=_s1.MB.D,Callback=function(s) _s1.MB.D=s end})
 
 local _tb3=_w1:Tab({Title="Scripts",Icon="solar:code-bold"})
--- 🤑Cargar Emotes eliminado de aquí (ahora está en el tag "Cargar emotes")
 _tb3:Button({Title="🗳️compuesto A-G-H v6",Desc="Es una hitbox mejorada talvez mejor ke eso😼☝️",Color=Color3.fromRGB(160,32,240),Callback=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,101,101,120,110,85,103,113,85)))() end})
 _tb3:Button({Title="👁️Activar Visuales (ESP)",Desc="Abre el menú separado de ESP y Chams",Color=Color3.fromRGB(255,100,0),Callback=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,119,100,120,102,55,71,97,55)))() end})
 _tb3:Button({Title="⌛A-R-T Aimbot",Desc="un arma para darle un levanton al rival 😼💥",Color=Color3.fromRGB(46,204,113),Callback=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,75,71,81,90,113,102,67,84)))() end})
 _tb3:Button({Title="💥 gema de la realidad",Desc="altera la realidad te cambia el modo de juego",Color=Color3.fromRGB(255,0,0),Callback=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,50,106,107,70,84,74,110,76)))() end})
 _tb3:Button({Title="🛩️ Flayers",Desc="pa ke vuelen alto mis panas esto funciona en otros juegos también",Color=Color3.fromRGB(37,122,247),Callback=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,65,74,89,113,115,115,99,82)))() end})
 _tb3:Button({Title="👻invisibles y otras variantes 👻💥",Desc="es una mini biblioteca que contiene variantes de invisible",Color=Color3.fromRGB(255,255,0),Callback=function() loadstring(game:HttpGet(string.char(104, 116, 116, 112, 115, 58, 47, 47, 112, 97, 115, 116, 101, 98, 105, 110, 46, 99, 111, 109, 47, 114, 97, 119, 47, 81, 81, 50, 88, 67, 53, 55, 106)))() end})
+-- ===== ACCESO INYECTOR RÁPIDO =====
+local _injList = {
+    {n="🗳️compuesto A-G-H v6", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,101,101,120,110,85,103,113,85)))() end},
+    {n="👁️Activar Visuales (ESP)", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,119,100,120,102,55,71,97,55)))() end},
+    {n="⌛A-R-T Aimbot", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,75,71,81,90,113,102,67,84)))() end},
+    {n="💥 gema de la realidad", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,50,106,107,70,84,74,110,76)))() end},
+    {n="🛩️ Flayers", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,65,74,89,113,115,115,99,82)))() end},
+    {n="👻invisibles y otras variantes 👻💥", r=function() loadstring(game:HttpGet(string.char(104, 116, 116, 112, 115, 58, 47, 47, 112, 97, 115, 116, 101, 98, 105, 110, 46, 99, 111, 109, 47, 114, 97, 119, 47, 81, 81, 50, 88, 67, 53, 55, 106)))() end},
+}
+local _injMap, _injNames = {}, {}
+for _, it in ipairs(_injList) do _injMap[it.n] = it; _injNames[#_injNames+1] = it.n end
+local _injFile, _injSel, _injReady, _injBusy, _injDD = "UltraXHub/QuickInject.json", {}, false, false, nil
+local function _injSave()
+    _G[HUB_ID.."_Inj"] = _injSel
+    pcall(function()
+        if writefile then
+            if makefolder and isfolder and not isfolder("UltraXHub") then makefolder("UltraXHub") end
+            writefile(_injFile, _v7:JSONEncode(_injSel)) end end) end
+local function _injLoad()
+    local ok, res = pcall(function()
+        if isfile and readfile and isfile(_injFile) then return _v7:JSONDecode(readfile(_injFile)) end end)
+    if not ok or type(res) ~= "table" then res = _G[HUB_ID.."_Inj"] end
+    local s = {}
+    if type(res) == "table" then
+        for _, v in ipairs(res) do
+            if type(v) == "string" and _injMap[v] then s[#s+1] = v end end end
+    return s end
+_injSel = _injLoad()
+local _tb5 = _w1:Tab({Title="Acceso inyector rápido",Icon="solar:bolt-bold"})
+local _secInj = _tb5
+_injDD = _secInj:Dropdown({Title="Seleccionar scripts",Desc="Elige los scripts que quieres ejecutar juntos (se guarda tu selección)",Values=_injNames,Value=(#_injSel > 0) and _injSel or nil,AllowNone=true,Multi=true,Callback=function(val)
+    if not _injReady then return end
+    local s = {}
+    local function add(v)
+        local nm = type(v) == "table" and (v.Title or v.Name) or v
+        if type(nm) == "string" and _injMap[nm] then s[#s+1] = nm end end
+    if type(val) == "table" then for _, v in pairs(val) do add(v) end elseif type(val) == "string" then add(val) end
+    _injSel = s; _injSave() end})
+_secInj:Button({Title="⚡ Ejecutar seleccionados",Desc="Ejecuta de una vez todos los scripts elegidos",Color=Color3.fromRGB(255,165,0),Justify="Center",Callback=function()
+    if _injBusy then return end
+    if #_injSel == 0 then _notif("Inyector rápido", "Selecciona al menos un script.", 3) return end
+    _injBusy = true
+    task.spawn(function()
+        local set, n = {}, 0
+        for _, nm in ipairs(_injSel) do set[nm] = true end
+        for _, it in ipairs(_injList) do
+            if not _b1 then break end
+            if set[it.n] then
+                n = n + 1
+                pcall(it.r)
+                task.wait(0) end end
+        _injBusy = false
+        _notif("Inyector rápido", "Ejecutados: "..n, 3) end) end})
+_secInj:Button({Title="🧹 Limpiar selección",Desc="Quita todos los scripts seleccionados",Color=Color3.fromRGB(180,40,40),Justify="Center",Callback=function()
+    _injReady = false; _injSel = {}; _injSave()
+    pcall(function() _injDD:SetValue(nil) end); pcall(function() if _injDD.Select then _injDD:Select(nil) end end)
+    task.delay(0.1, function() _injReady = true end)
+    _notif("Inyector rápido", "Selección borrada.", 3) end})
+task.delay(0.1, function() _injReady = true end)
+task.spawn(function()
+    task.wait(0.1)
+    if not _b1 then return end
+    local ok = pcall(function() _tb3:Select() end)
+    if not ok then pcall(function() _w1:SelectTab(4) end) end end)
 -- DETECTOR DE DESTRUCCIÓN SEGURO (LIMPIEZA TOTAL AL USAR LA 'X')
 -- ==========================================
 -- ===== LIMPIEZA TOTAL =====
