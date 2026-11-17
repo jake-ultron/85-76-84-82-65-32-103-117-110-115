@@ -78,7 +78,7 @@ local _disabledScripts = {}
 local _charAddedConn = nil
 local _extra = {}
 -- ===== GUARDADO DE MOVILIDAD =====
-local _mvFile, _mvOn, _mvReady, _mvLast, _mvGetG, _mvG = "UltraXHub/Movilidad.json", false, false, "", nil, nil
+local _mvFile, _mvOn, _mvReady, _mvLast = "UltraXHub/Movilidad.json", false, false, ""
 local function _mvRead()
     local ok, res = pcall(function()
         if isfile and readfile and isfile(_mvFile) then return _v7:JSONDecode(readfile(_mvFile)) end end)
@@ -93,7 +93,7 @@ local function _mvWrite(d)
             writefile(_mvFile, _v7:JSONEncode(d)) end end) end
 local function _mvSave(force)
     if not _mvOn then return end
-    local d = {on=true, ws=_s1.WS.V, wse=_s1.WS.E, tp=_s1.TP.V, tpe=_s1.TP.E, ar=_s1.AR, er=_s1.ER.E, ij=_s1.IJ, nc=_s1.NC, g=_mvGetG and _mvGetG() or nil}
+    local d = {on=true, ws=_s1.WS.V, wse=_s1.WS.E, tp=_s1.TP.V, tpe=_s1.TP.E, ar=_s1.AR, er=_s1.ER.E, ij=_s1.IJ, nc=_s1.NC}
     local sig = _v7:JSONEncode(d)
     if force or sig ~= _mvLast then _mvLast = sig; _mvWrite(d) end end
 local _mvS = _mvRead()
@@ -103,8 +103,7 @@ if _mvS.on == true then
     if tonumber(_mvS.tp) then _s1.TP.V = tonumber(_mvS.tp) end
     _s1.WS.E = _mvS.wse == true; _s1.TP.E = _mvS.tpe == true
     _s1.AR = _mvS.ar == true; _s1.ER.E = _mvS.er == true
-    _s1.IJ = _mvS.ij == true; _s1.NC = _mvS.nc == true
-    _mvG = tonumber(_mvS.g) end
+    _s1.IJ = _mvS.ij == true; _s1.NC = _mvS.nc == true end
 
 local function disableBadScripts(char)
     if not char then return end
@@ -414,43 +413,6 @@ _tb1:Input({
 
 _tgDash=_tb1:Toggle({Title="Loop TP Walk",Desc="Avanza ignorando colisiones (Dash)",Value=_s1.TP.E,Callback=function(s) _setDash(s,true) end})
 
--- ===== GRAVITY =====
-local _gravDef = workspace.Gravity
-local _gravTxt = tostring(math.floor(_gravDef*100+0.5)/100)
-local _gravVal, _gravOn, _initGR, _grBusy = _gravDef, false, false, false
-local function _applyGravity(v) pcall(function() workspace.Gravity = v end) end
-local _inGrav
-_inGrav=_tb1:Input({
-    Title="Gravity",
-    Desc="Modifica la gravedad del mundo (Defecto: ".._gravTxt..")",
-    PlaceholderText="Ej: 196.2",
-    Value=(_mvG and _mvG ~= _gravDef) and tostring(_mvG) or nil,
-    Callback=function(t)
-        if _grBusy then return end
-        local v=tonumber(t)
-        if v and v==v then
-            local c=math.clamp(v,0,9999)
-            if c~=v and _initGR then
-                _notif("Ajuste automático", "Gravedad limitada a 0 - 9999.", 3) end
-            _gravVal=c; _gravOn=true; _applyGravity(c)
-        else
-            _gravVal=_gravDef; _gravOn=false; _applyGravity(_gravDef)
-            if _initGR then
-                _notif("Ajuste automático", "Gravedad restaurada a ".._gravTxt.." por defecto.", 3) end end
-        _initGR = true end
-})
-_tb1:Button({Title="Reset Gravity",Desc="Reinicia la gravedad al valor por defecto",Color=Color3.fromRGB(37,122,247),Justify="Center",Callback=function()
-    _gravVal=_gravDef; _gravOn=false; _applyGravity(_gravDef)
-    _grBusy=true; pcall(function() _inGrav:Set("") end); task.delay(0.3,function() _grBusy=false end)
-    _notif("Gravity", "Gravedad restaurada a ".._gravTxt..".", 3) end})
-_extra[#_extra+1]=_v8.CharacterAdded:Connect(function()
-    if not _gravOn then return end
-    task.wait(0.3)
-    if _b1 and _gravOn then _applyGravity(_gravVal) end
-    task.wait(1)
-    if _b1 and _gravOn then _applyGravity(_gravVal) end end)
-_mvGetG = function() return _gravOn and _gravVal or nil end
-
 _tb1:Toggle({Title="Anti-Ragdoll",Desc="Evita que tu personaje se caiga o tropiece (No hay daño de caída)",Value=_s1.AR,Callback=_f1})
 _tb1:Toggle({Title="Escape Ragdoll",Desc="Te libera automáticamente de del cooldonw o que te papen",Value=_s1.ER.E,Callback=function(s) _s1.ER.E=s end})
 _tb1:Toggle({Title="Infinite Jump",Desc="Te permite saltar en el aire sin límites",Value=_s1.IJ,Callback=function(s) _s1.IJ=s end})
@@ -459,8 +421,7 @@ _tb1:Toggle({Title="Noclip",Desc="Atraviesa paredes como si fueras un fantasma",
 local function _mvApply()
     if not _mvOn then return end
     if _s1.TP.E then _setDash(true, true) end
-    if _s1.AR then _f1(true) end
-    if _mvG then _gravVal = math.clamp(_mvG, 0, 9999); _gravOn = true; _applyGravity(_gravVal) end end
+    if _s1.AR then _f1(true) end end
 _mvApply()
 
 local _tb2=_w1:Tab({Title="Teletransportador",Icon="solar:map-point-bold"})
@@ -591,8 +552,6 @@ _cleanup = function()
     if _v8.Character then
         local h = _v8.Character:FindFirstChildOfClass("Humanoid")
         if h then h.WalkSpeed = 16 end end
-
-    if _gravOn then pcall(function() workspace.Gravity = _gravDef end) end
 
     for _, c in pairs({_c1, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9, _charAddedConn}) do
         if c then pcall(function() c:Disconnect() end) end end
