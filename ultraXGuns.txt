@@ -136,10 +136,10 @@ local function _f1(st)
 [Enum.HumanoidStateType.Ragdoll] = false
         }
 
+        local lastFire = 0
         _c3 = _v3.Heartbeat:Connect(function()
             if not _s1.AR then return end
-            if ev then pcall(function() ev:FireServer(false) end) end
-
+            local bad = false
             if _v8.Character then
                 local h = _v8.Character:FindFirstChildOfClass("Humanoid")
                 if h then
@@ -147,8 +147,14 @@ local function _f1(st)
                     h:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
 
                     if badStates[h:GetState()] then
+                        bad = true
                         h:ChangeState(Enum.HumanoidStateType.Running) end
-                    h.PlatformStand = false end end end)
+                    if h.PlatformStand then bad = true; h.PlatformStand = false end end end
+            if ev then
+                local now = os.clock()
+                if bad or now - lastFire >= 0.1 then
+                    lastFire = now
+                    pcall(ev.FireServer, ev, false) end end end)
 
         disableBadScripts(_v8.Character)
 
@@ -171,7 +177,16 @@ local function _f1(st)
         enableBadScripts() end end
 
 _c1=_v2.JumpRequest:Connect(function() if _s1.IJ and _v8.Character and _v8.Character:FindFirstChildOfClass("Humanoid") then _v8.Character.Humanoid:ChangeState(3) end end)
-_c2=_v3.Heartbeat:Connect(function(dt) local c=_v8.Character; if not c then return end; local h,hrp=c:FindFirstChildOfClass("Humanoid"),c:FindFirstChild("HumanoidRootPart"); if h then if _s1.WS.E then h.WalkSpeed=_s1.WS.V end; if _s1.TP.E and hrp and h.MoveDirection.Magnitude>0 then local dtC=dt>0.05 and 0.016 or dt; hrp.CFrame=hrp.CFrame+(h.MoveDirection*(_s1.TP.V*dtC*60)) end end end)
+local _cc, _ch, _chrp = nil, nil, nil
+_c2=_v3.Heartbeat:Connect(function(dt)
+    if not (_s1.WS.E or _s1.TP.E) then return end
+    local c=_v8.Character; if not c then return end
+    if c ~= _cc or not _ch or not _ch.Parent or not _chrp or not _chrp.Parent then
+        _cc=c; _ch=c:FindFirstChildOfClass("Humanoid"); _chrp=c:FindFirstChild("HumanoidRootPart") end
+    local h,hrp=_ch,_chrp
+    if h then
+        if _s1.WS.E and h.WalkSpeed~=_s1.WS.V then h.WalkSpeed=_s1.WS.V end
+        if _s1.TP.E and hrp and h.MoveDirection.Magnitude>0 then local dtC=dt>0.05 and 0.016 or dt; hrp.CFrame=hrp.CFrame+(h.MoveDirection*(_s1.TP.V*dtC*60)) end end end)
 _c4=_v3.Stepped:Connect(function() if _s1.NC and _v8.Character then for _,v in pairs(_v8.Character:GetChildren()) do if v:IsA("BasePart") and v.CanCollide then v.CanCollide=false end end end end)
 
 local function _f2() if _s1.ER.IT then return end; _s1.ER.IT=true; local c=_v8.Character; local hrp=c and c:FindFirstChild("HumanoidRootPart"); local hum=c and c:FindFirstChildOfClass("Humanoid"); if c and hrp and hum then for _,v in pairs(c:GetDescendants()) do if (v:IsA("Weld") or v:IsA("WeldConstraint") or v:IsA("ManualWeld")) and v.Part0 and v.Part1 and (not v.Part0:IsDescendantOf(c) or not v.Part1:IsDescendantOf(c)) then pcall(function() v:Destroy() end) end end; local oCF=hrp.CFrame; hrp.Velocity=Vector3.zero; pcall(function() c:PivotTo(oCF*CFrame.new(0,-_s1.ER.TD,0)) end); task.wait(_s1.ER.WT); pcall(function() c:PivotTo(oCF) end); hrp.Velocity=Vector3.zero; pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end) end; _s1.ER.HC=0; task.wait(1.5); _s1.ER.IT=false end
@@ -362,10 +377,16 @@ task.spawn(function()
         local colorYellow = Color3.fromRGB(255, 255, 0)
         local colorBlack = Color3.fromRGB(0, 0, 0)
 
-        _c8 = game:GetService("RunService").RenderStepped:Connect(function()
+        local _rbAcc = 0
+        _c8 = _v3.Heartbeat:Connect(function(dt)
             if not _b1 or not targetStroke.Parent then
                 if _c8 then _c8:Disconnect(); _c8 = nil end
                 return end
+            _rbAcc = _rbAcc + dt
+            if _rbAcc < 0.05 then return end
+            _rbAcc = 0
+            local pp = targetStroke.Parent
+            if pp:IsA("GuiObject") and not pp.Visible then return end
             local alpha = (math.sin(tick() * 3) + 1) / 2
             targetStroke.Color = colorYellow:Lerp(colorBlack, alpha) end)
     elseif _b1 then
@@ -441,8 +462,13 @@ local function _refDP()
     if not p then _dpSel = nil end
     pcall(function() _dp1:Select(p and (p.Name.."| "..p.DisplayName) or nil) end)
     task.wait(0.1); _dpBusy = false; _dpT = tick() end
-_extra[#_extra+1]=_v1.PlayerAdded:Connect(function() task.delay(0.2, function() _refDP() end) end)
-_extra[#_extra+1]=_v1.PlayerRemoving:Connect(function() task.delay(0.2, function() _refDP() end) end)
+local _dpPend = false
+local function _dpSched()
+    if _dpPend then return end
+    _dpPend = true
+    task.delay(0.3, function() _dpPend = false; _refDP() end) end
+_extra[#_extra+1]=_v1.PlayerAdded:Connect(_dpSched)
+_extra[#_extra+1]=_v1.PlayerRemoving:Connect(_dpSched)
 _tb2:Button({Title="Teleport to Selected",Desc="Viaja seguro en mapas gigantes",Color=Color3.fromRGB(37,122,247),Justify="Center",Callback=function() local tg=_v1:FindFirstChild(_dpSel or ""); if tg and tg.Character and tg.Character:FindFirstChild("HumanoidRootPart") and _v8.Character and _v8.Character:FindFirstChild("HumanoidRootPart") then local hrp=_v8.Character.HumanoidRootPart; hrp.Anchored=true; _v8.Character:PivotTo(tg.Character.HumanoidRootPart.CFrame*CFrame.new(0,3,3)); task.delay(0.6,function() if hrp then hrp.Anchored=false end end) end end})
 _tb2:Divider()
 _tb2:Button({Title="🌀 abrir portalius",Desc="con esto puedes ir a dónde quieras literalmente el poder de portales🌀",Color=Color3.fromRGB(255,215,0),Justify="Center",Callback=function() loadstring(game:HttpGet("\104\116\116\112\115\58\47\47\112\97\115\116\101\102\121\46\97\112\112\47\100\88\84\113\113\72\48\84\47\114\97\119"))() end})
