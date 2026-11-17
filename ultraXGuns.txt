@@ -77,6 +77,34 @@ local _b1,_c1,_c2,_c3,_c4,_c5,_c6,_c7,_c8,_c9=true,nil,nil,nil,nil,nil,nil,nil,n
 local _disabledScripts = {}
 local _charAddedConn = nil
 local _extra = {}
+-- ===== GUARDADO DE MOVILIDAD =====
+local _mvFile, _mvOn, _mvReady, _mvLast, _mvGetG, _mvG = "UltraXHub/Movilidad.json", false, false, "", nil, nil
+local function _mvRead()
+    local ok, res = pcall(function()
+        if isfile and readfile and isfile(_mvFile) then return _v7:JSONDecode(readfile(_mvFile)) end end)
+    if ok and type(res) == "table" then return res end
+    if type(_G[HUB_ID.."_Mv"]) == "table" then return _G[HUB_ID.."_Mv"] end
+    return {} end
+local function _mvWrite(d)
+    _G[HUB_ID.."_Mv"] = d
+    pcall(function()
+        if writefile then
+            if makefolder and isfolder and not isfolder("UltraXHub") then makefolder("UltraXHub") end
+            writefile(_mvFile, _v7:JSONEncode(d)) end end) end
+local function _mvSave(force)
+    if not _mvOn then return end
+    local d = {on=true, ws=_s1.WS.V, wse=_s1.WS.E, tp=_s1.TP.V, tpe=_s1.TP.E, ar=_s1.AR, er=_s1.ER.E, ij=_s1.IJ, nc=_s1.NC, g=_mvGetG and _mvGetG() or nil}
+    local sig = _v7:JSONEncode(d)
+    if force or sig ~= _mvLast then _mvLast = sig; _mvWrite(d) end end
+local _mvS = _mvRead()
+if _mvS.on == true then
+    _mvOn = true
+    if tonumber(_mvS.ws) then _s1.WS.V = tonumber(_mvS.ws) end
+    if tonumber(_mvS.tp) then _s1.TP.V = tonumber(_mvS.tp) end
+    _s1.WS.E = _mvS.wse == true; _s1.TP.E = _mvS.tpe == true
+    _s1.AR = _mvS.ar == true; _s1.ER.E = _mvS.er == true
+    _s1.IJ = _mvS.ij == true; _s1.NC = _mvS.nc == true
+    _mvG = tonumber(_mvS.g) end
 
 local function disableBadScripts(char)
     if not char then return end
@@ -353,6 +381,7 @@ _tb1:Input({
     Title="Walk Speed",
     Desc="Modifica tu velocidad de movimiento",
     PlaceholderText="Ej: 16",
+    Value=(_mvOn and _s1.WS.V ~= 16) and tostring(_s1.WS.V) or nil,
     Callback=function(t)
         local v=tonumber(t)
         if v then
@@ -371,6 +400,7 @@ _tb1:Input({
     Title="TP Walk",
     Desc="Distancia de teletransporte por paso",
     PlaceholderText="Ej: 1",
+    Value=(_mvOn and _s1.TP.V ~= 1) and tostring(_s1.TP.V) or nil,
     Callback=function(t)
         local v=tonumber(t)
         if v then
@@ -394,6 +424,7 @@ _inGrav=_tb1:Input({
     Title="Gravity",
     Desc="Modifica la gravedad del mundo (Defecto: ".._gravTxt..")",
     PlaceholderText="Ej: 196.2",
+    Value=(_mvG and _mvG ~= _gravDef) and tostring(_mvG) or nil,
     Callback=function(t)
         if _grBusy then return end
         local v=tonumber(t)
@@ -418,11 +449,19 @@ _extra[#_extra+1]=_v8.CharacterAdded:Connect(function()
     if _b1 and _gravOn then _applyGravity(_gravVal) end
     task.wait(1)
     if _b1 and _gravOn then _applyGravity(_gravVal) end end)
+_mvGetG = function() return _gravOn and _gravVal or nil end
 
 _tb1:Toggle({Title="Anti-Ragdoll",Desc="Evita que tu personaje se caiga o tropiece (No hay daño de caída)",Value=_s1.AR,Callback=_f1})
 _tb1:Toggle({Title="Escape Ragdoll",Desc="Te libera automáticamente de del cooldonw o que te papen",Value=_s1.ER.E,Callback=function(s) _s1.ER.E=s end})
 _tb1:Toggle({Title="Infinite Jump",Desc="Te permite saltar en el aire sin límites",Value=_s1.IJ,Callback=function(s) _s1.IJ=s end})
 _tb1:Toggle({Title="Noclip",Desc="Atraviesa paredes como si fueras un fantasma",Value=_s1.NC,Callback=function(s) _s1.NC=s; if not s and _v8.Character then for _,v in pairs(_v8.Character:GetChildren()) do if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then v.CanCollide=true end end end end})
+-- ===== RESTAURAR MOVILIDAD GUARDADA =====
+local function _mvApply()
+    if not _mvOn then return end
+    if _s1.TP.E then _setDash(true, true) end
+    if _s1.AR then _f1(true) end
+    if _mvG then _gravVal = math.clamp(_mvG, 0, 9999); _gravOn = true; _applyGravity(_gravVal) end end
+_mvApply()
 
 local _tb2=_w1:Tab({Title="Teletransportador",Icon="solar:map-point-bold"})
 _tb2:Button({Title="Reset Character",Desc="Reinicia tu personaje sin bugs",Color=Color3.fromRGB(46,204,113),Justify="Center",Callback=function() _resetChar() end})
@@ -449,7 +488,7 @@ _tb2:Button({Title="🌀 abrir portalius",Desc="con esto puedes ir a dónde quie
 _tb2:Button({Title="⚙️ abrir Fusion bangs v8",Desc="sirve para farmear o también una alternativa de bang para molestar 😹☝️",Color=Color3.fromRGB(0,128,255),Justify="Center",Callback = function()
 loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,114,97,119,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,106,97,107,101,45,117,108,116,114,111,110,47,66,97,110,103,115,45,121,45,97,117,116,111,45,102,97,114,109,115,47,114,101,102,115,47,104,101,97,100,115,47,109,97,105,110,47,70,117,115,105,111,110,85,66,97,110,103,86,56,46,116,120,116)))() end})
 _tb2:Divider()
-_tb2:Button({Title="🔙Rejoin Server",Desc="Te saca y te vuelve a meter al mismo servidor",Color=Color3.fromRGB(192,39,52),Justify="Center",Callback=function() _v6:TeleportToPlaceInstance(game.PlaceId,game.JobId,_v8) end})
+_tb2:Button({Title="🔙Rejoin Server",Desc="Te saca y te vuelve a meter al mismo servidor",Color=Color3.fromRGB(192,39,52),Justify="Center",Callback=function() pcall(_mvSave, true); _v6:TeleportToPlaceInstance(game.PlaceId,game.JobId,_v8) end})
 
 local _tb4=_w1:Tab({Title="Ajustes",Icon="solar:settings-bold"})
 _tb4:Keybind({Title="UI Toggle Keybind",Desc="Tecla para ocultar o mostrar el menú principal",Value=_s1.UI.K,Callback=function(k) _s1.UI.K=k; _w1:SetToggleKey(Enum.KeyCode[k]) end})
@@ -466,6 +505,10 @@ _tb3:Button({Title="🛩️ Flayers",Desc="pa ke vuelen alto mis panas esto func
 _tb3:Button({Title="👻invisibles y otras variantes 👻💥",Desc="es una mini biblioteca que contiene variantes de invisible",Color=Color3.fromRGB(255,255,0),Callback=function() loadstring(game:HttpGet(string.char(104, 116, 116, 112, 115, 58, 47, 47, 112, 97, 115, 116, 101, 98, 105, 110, 46, 99, 111, 109, 47, 114, 97, 119, 47, 81, 81, 50, 88, 67, 53, 55, 106)))() end})
 -- ===== ACCESO INYECTOR RÁPIDO =====
 local _injList = {
+    {n="🛡️ Defensas", r=_onDefensasClick},
+    {n="🐼 Cargar emotes", r=_onExtensionesClick},
+    {n="🌀 abrir portalius", r=function() loadstring(game:HttpGet("\104\116\116\112\115\58\47\47\112\97\115\116\101\102\121\46\97\112\112\47\100\88\84\113\113\72\48\84\47\114\97\119"))() end},
+    {n="⚙️ abrir Fusion bangs v8", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,114,97,119,46,103,105,116,104,117,98,117,115,101,114,99,111,110,116,101,110,116,46,99,111,109,47,106,97,107,101,45,117,108,116,114,111,110,47,66,97,110,103,115,45,121,45,97,117,116,111,45,102,97,114,109,115,47,114,101,102,115,47,104,101,97,100,115,47,109,97,105,110,47,70,117,115,105,111,110,85,66,97,110,103,86,56,46,116,120,116)))() end},
     {n="🗳️compuesto A-G-H v6", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,101,101,120,110,85,103,113,85)))() end},
     {n="👁️Activar Visuales (ESP)", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,119,100,120,102,55,71,97,55)))() end},
     {n="⌛A-R-T Aimbot", r=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,75,71,81,90,113,102,67,84)))() end},
@@ -522,6 +565,13 @@ _secInj:Button({Title="🧹 Limpiar selección",Desc="Quita todos los scripts se
     pcall(function() _injDD:SetValue(nil) end); pcall(function() if _injDD.Select then _injDD:Select(nil) end end)
     task.delay(0.1, function() _injReady = true end)
     _notif("Inyector rápido", "Selección borrada.", 3) end})
+_tb5:Divider()
+_tb5:Toggle({Title="Guardar Movilidad (Rejoin)",Desc="Guarda tus ajustes de Movilidad y los restaura al volver a ejecutar el hub después de un rejoin",Value=_mvOn,Callback=function(s)
+    _mvOn = s
+    if s then pcall(_mvSave, true) else _mvLast = ""; pcall(_mvWrite, {on=false}) end
+    if _mvReady then _notif("Movilidad", s and "Ajustes guardados. Se restaurarán al volver a ejecutar." or "Guardado desactivado.", 3) end end})
+task.delay(0.5, function() _mvReady = true end)
+task.spawn(function() while _b1 do task.wait(2); if _mvOn then pcall(_mvSave) end end end)
 task.delay(0.1, function() _injReady = true end)
 task.spawn(function()
     task.wait(0.1)
@@ -534,6 +584,7 @@ task.spawn(function()
 _cleanup = function()
     if not _b1 then return end
     _b1 = false
+    pcall(_mvSave, true)
     pcall(function() _f1(false) end)
 
     _s1.WS.E = false
