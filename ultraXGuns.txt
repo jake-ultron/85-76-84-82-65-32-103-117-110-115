@@ -190,13 +190,13 @@ _c2=_v3.Heartbeat:Connect(function(dt)
 _c4=_v3.Stepped:Connect(function() if _s1.NC and _v8.Character then for _,v in pairs(_v8.Character:GetChildren()) do if v:IsA("BasePart") and v.CanCollide then v.CanCollide=false end end end end)
 
 local function _f2() if _s1.ER.IT then return end; _s1.ER.IT=true; local c=_v8.Character; local hrp=c and c:FindFirstChild("HumanoidRootPart"); local hum=c and c:FindFirstChildOfClass("Humanoid"); if c and hrp and hum then for _,v in pairs(c:GetDescendants()) do if (v:IsA("Weld") or v:IsA("WeldConstraint") or v:IsA("ManualWeld")) and v.Part0 and v.Part1 and (not v.Part0:IsDescendantOf(c) or not v.Part1:IsDescendantOf(c)) then pcall(function() v:Destroy() end) end end; local oCF=hrp.CFrame; hrp.Velocity=Vector3.zero; pcall(function() c:PivotTo(oCF*CFrame.new(0,-_s1.ER.TD,0)) end); task.wait(_s1.ER.WT); pcall(function() c:PivotTo(oCF) end); hrp.Velocity=Vector3.zero; pcall(function() hum:ChangeState(Enum.HumanoidStateType.Running) end) end; _s1.ER.HC=0; task.wait(1.5); _s1.ER.IT=false end
-task.spawn(function() while _b1 do task.wait(0.5); if _s1.ER.HC>0 and (tick()-_s1.ER.LHT)>=_s1.ER.RT then _s1.ER.HC=0 end end end)
 
 local function _f3(c) if _c6 then _c6:Disconnect() end; if _c7 then _c7:Disconnect() end; local h=c:WaitForChild("Humanoid",5); if not h then return end; local lH=h.Health; _c6=h.HealthChanged:Connect(function(v) if not _s1.ER.E or _s1.ER.IT then lH=v return end; if v<lH then local tk=tick(); if tk-_s1.ER.LHT>_s1.ER.Db then _s1.ER.HC=_s1.ER.HC+1; _s1.ER.LHT=tk; if _s1.ER.HC>=_s1.ER.HT then _f2() end end end; lH=v end); _c7=h.StateChanged:Connect(function(_,nS) if _s1.ER.E and (nS==Enum.HumanoidStateType.Ragdoll or nS==Enum.HumanoidStateType.FallingDown) then _f2() end end) end
 _c5=_v8.CharacterAdded:Connect(_f3); if _v8.Character then task.spawn(_f3,_v8.Character) end
 
 local _g1=Instance.new("ScreenGui"); _g1.Name="MobileButtonsGuiUXG"; _g1.Parent=_v8:WaitForChild("PlayerGui"); _g1.ResetOnSpawn=false; _g1.ZIndexBehavior=Enum.ZIndexBehavior.Sibling; _g1.DisplayOrder=0
 local function _f4(t,p,c,cb) local b=Instance.new("TextButton"); b.Name="MB"; b.Size=UDim2.new(0,60,0,45); b.Position=p; b.BackgroundColor3=c; b.BackgroundTransparency=0.4; b.Text=t; b.TextColor3=Color3.fromRGB(255,255,255); b.Font=Enum.Font.GothamBold; b.TextSize=12; b.AutoButtonColor=false; b.Parent=_g1; Instance.new("UICorner",b).CornerRadius=UDim.new(0,8); b.MouseButton1Click:Connect(cb); return b end
+
 -- ===== DRAG CON CLAMP (BOTÓN DASH) =====
 local _dragMoved = false
 local function _getPA()
@@ -258,6 +258,8 @@ _extra[#_extra+1]=_v2.InputBegan:Connect(function(input, gp)
         _setDash(not _s1.TP.E)
     elseif k == Enum.KeyCode[_s1.KB.R] then
         _resetChar() end end)
+
+-- ==========================================
 -- CREACIÓN DE VENTANA (WINDUI)
 -- ==========================================
 local _w1=_v9:CreateWindow({
@@ -283,6 +285,7 @@ local _w1=_v9:CreateWindow({
     }
 })
 _w1:SetToggleKey(Enum.KeyCode[_s1.UI.K])
+
 -- CALLBACKS DE LOS TAGS
 -- ==========================================
 local function _onDefensasClick()
@@ -303,15 +306,15 @@ _w1:Tag({
     Color = Color3.fromRGB(255,165,0),
     Border = true
 })
--- HACER LOS TAGS CLICKEABLES (con hover + touch + pointer)
--- ==========================================
+
+-- HACER LOS TAGS CLICKEABLES
 task.spawn(function()
     task.wait(0.1)
     if not _b1 then return end
     local uiContainer = _myGui() or GetSecureContainer()
     local _handlers = {
         ["defensas"]      = _onDefensasClick,
-        ["cargar emotes"] = _onExtensionesClick   -- ← ahora coincide con el Title
+        ["cargar emotes"] = _onExtensionesClick
     }
     local _found = {}
 
@@ -322,7 +325,6 @@ task.spawn(function()
             if cb and not _found[txt] then
                 _found[txt] = true
 
-                -- Buscar el contenedor padre clickeable (Tag base)
                 local clickTarget = obj
                 local parentBtn = obj:FindFirstAncestorWhichIsA("TextButton")
                                   or obj:FindFirstAncestorWhichIsA("ImageButton")
@@ -331,13 +333,11 @@ task.spawn(function()
                 clickTarget.Active = true
                 clickTarget.Selectable = true
 
-                -- 🖱️ Detección de clic (mouse + táctil)
                 clickTarget.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1
                     or input.UserInputType == Enum.UserInputType.Touch then
                         pcall(cb) end end)
 
-                -- ✨ Efecto hover (cambio de color suave)
                 local origColor = obj.TextColor3
                 local hoverColor = Color3.fromRGB(255, 255, 100)
 
@@ -345,52 +345,7 @@ task.spawn(function()
                     obj.TextColor3 = hoverColor end)
                 clickTarget.MouseLeave:Connect(function()
                     obj.TextColor3 = origColor end) end end end
-
-    if not (_found["defensas"] and _found["cargar emotes"]) then
-        warn("[HsHub] No se pudieron enlazar todos los tags como botones. Verifica que existan en el UI.") end end)
---rainbow borde corregido--
-task.spawn(function()
-    local uiContainer = GetSecureContainer()
-    local targetStroke = nil
--- Bucle de reintento: busca por un máximo de 10 segundos en vez de esperar solo 3
-    local intentos = 0
-    while intentos < 20 and not targetStroke and _b1 do
-        for _, obj in ipairs(uiContainer:GetDescendants()) do
-            -- Buscamos solo "ULTRA GUNS" para evitar fallos con el emoji
-            if (obj:IsA("TextLabel") or obj:IsA("TextButton")) and string.find(obj.Text, "ULTRA GUNS") then
-                local currentLayer = obj
-                for i = 1, 4 do
-                    if currentLayer then
-                        -- CORRECCIÓN AQUÍ: FindFirstChildWhichIsA(..., true) busca en TODOS los descendientes, no solo hijos directos
-                        local stroke = currentLayer:FindFirstChildWhichIsA("UIStroke", true)
-                        if stroke then
-                            targetStroke = stroke
-                            break end
-                        currentLayer = currentLayer.Parent end end
-                if targetStroke then break end end end
-        
-        if not targetStroke then
-            intentos = intentos + 1
-            task.wait(0.5) end end
-
-    if targetStroke and _b1 then
-        local colorYellow = Color3.fromRGB(255, 255, 0)
-        local colorBlack = Color3.fromRGB(0, 0, 0)
-
-        local _rbAcc = 0
-        _c8 = _v3.Heartbeat:Connect(function(dt)
-            if not _b1 or not targetStroke.Parent then
-                if _c8 then _c8:Disconnect(); _c8 = nil end
-                return end
-            _rbAcc = _rbAcc + dt
-            if _rbAcc < 0.05 then return end
-            _rbAcc = 0
-            local pp = targetStroke.Parent
-            if pp:IsA("GuiObject") and not pp.Visible then return end
-            local alpha = (math.sin(tick() * 3) + 1) / 2
-            targetStroke.Color = colorYellow:Lerp(colorBlack, alpha) end)
-    elseif _b1 then
-        warn("[Hub] Error: No se pudo encontrar el contorno del OpenButton. Revisa si el botón se creó correctamente.") end end)
+end)
 
 -- PESTAÑAS Y FUNCIONES COMPLETAS
 -- ==========================================
@@ -438,6 +393,7 @@ _tb1:Toggle({Title="Anti-Ragdoll",Desc="Evita que tu personaje se caiga o tropie
 _tb1:Toggle({Title="Escape Ragdoll",Desc="Te libera automáticamente de del cooldonw o que te papen",Value=_s1.ER.E,Callback=function(s) _s1.ER.E=s end})
 _tb1:Toggle({Title="Infinite Jump",Desc="Te permite saltar en el aire sin límites",Value=_s1.IJ,Callback=function(s) _s1.IJ=s end})
 _tb1:Toggle({Title="Noclip",Desc="Atraviesa paredes como si fueras un fantasma",Value=_s1.NC,Callback=function(s) _s1.NC=s; if not s and _v8.Character then for _,v in pairs(_v8.Character:GetChildren()) do if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then v.CanCollide=true end end end end})
+
 -- ===== RESTAURAR MOVILIDAD GUARDADA =====
 local function _mvApply()
     if not _mvOn then return end
@@ -447,6 +403,7 @@ _mvApply()
 
 local _tb2=_w1:Tab({Title="Teletransportador",Icon="solar:map-point-bold"})
 _tb2:Button({Title="Reset Character",Desc="Reinicia tu personaje sin bugs",Color=Color3.fromRGB(46,204,113),Justify="Center",Callback=function() _resetChar() end})
+
 -- ===== DROPDOWN TELEPORT (NOMBRE + APODO, ACTUALIZACIÓN INSTANTÁNEA) =====
 local _dpSel, _dpBusy, _dpT = nil, false, 0
 local function _f5() local l={}; for _,p in pairs(_v1:GetPlayers()) do if p~=_v8 then table.insert(l,p.Name.."| "..p.DisplayName) end end; table.sort(l); return l end
@@ -490,6 +447,7 @@ _tb3:Button({Title="⌛A-R-T Aimbot",Desc="un arma para darle un levanton al riv
 _tb3:Button({Title="💥 gema de la realidad",Desc="altera la realidad te cambia el modo de juego",Color=Color3.fromRGB(255,0,0),Callback=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,50,106,107,70,84,74,110,76)))() end})
 _tb3:Button({Title="🛩️ Flayers",Desc="pa ke vuelen alto mis panas esto funciona en otros juegos también",Color=Color3.fromRGB(37,122,247),Callback=function() loadstring(game:HttpGet(string.char(104,116,116,112,115,58,47,47,112,97,115,116,101,98,105,110,46,99,111,109,47,114,97,119,47,65,74,89,113,115,115,99,82)))() end})
 _tb3:Button({Title="👻invisibles y otras variantes 👻💥",Desc="es una mini biblioteca que contiene variantes de invisible",Color=Color3.fromRGB(255,255,0),Callback=function() loadstring(game:HttpGet(string.char(104, 116, 116, 112, 115, 58, 47, 47, 112, 97, 115, 116, 101, 98, 105, 110, 46, 99, 111, 109, 47, 114, 97, 119, 47, 81, 81, 50, 88, 67, 53, 55, 106)))() end})
+
 -- ===== ACCESO INYECTOR RÁPIDO =====
 local _injList = {
     {n="🛡️ Defensas", r=_onDefensasClick},
@@ -565,8 +523,7 @@ task.spawn(function()
     if not _b1 then return end
     local ok = pcall(function() _tb3:Select() end)
     if not ok then pcall(function() _w1:SelectTab(4) end) end end)
--- DETECTOR DE DESTRUCCIÓN SEGURO (LIMPIEZA TOTAL AL USAR LA 'X')
--- ==========================================
+
 -- ===== LIMPIEZA TOTAL =====
 _cleanup = function()
     if not _b1 then return end
@@ -604,12 +561,6 @@ task.spawn(function()
         _G[GUI_K] = mainGui
         mainGui.Destroying:Connect(_cleanup)
         destroyOldWindows(mainGui, _g1)
-        for _, cont in ipairs(getAllContainers()) do
-            if cont then
-                _extra[#_extra+1] = cont.ChildAdded:Connect(function(gui)
-                    task.delay(0.5, function()
-                        if _b1 and gui ~= mainGui and gui ~= _g1 and gui.Parent and isThisHubScreen(gui) then
-                            pcall(function() gui:Destroy() end) end end) end) end end
     else
         warn("[Hub] Búsqueda Segura Activa: No se pudo anclar la limpieza automática.") end end)
 -- ble 👻
