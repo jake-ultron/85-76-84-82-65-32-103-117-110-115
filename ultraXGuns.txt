@@ -83,7 +83,7 @@ end
 local ICONS = {
     ["solar:running-bold"] = "🏃", ["solar:map-point-bold"] = "📍", ["solar:settings-bold"] = "⚙️",
     ["solar:code-bold"] = "</>", ["solar:bolt-bold"] = "⚡", ["solar:shield-bold"] = "🛡️",
-    ["lucide:panda"] = "🐼",
+    ["lucide:panda"] = "😼",
 }
 
 -- ---------- Utilidades ----------
